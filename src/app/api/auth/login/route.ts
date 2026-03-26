@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { createSession, validateCredentials } from "@/lib/auth";
+import { createSession } from "@/lib/auth";
+import { findUserByCredentials } from "@/lib/supabaseData";
 
 type LoginBody = {
   email?: string;
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
 
   const email = String(body.email ?? "").trim().toLowerCase();
   const password = String(body.password ?? "");
-  const user = validateCredentials(email, password);
+  const user = await findUserByCredentials(email, password);
 
   if (!user) {
     return NextResponse.json(

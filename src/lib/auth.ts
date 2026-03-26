@@ -1,14 +1,22 @@
 import { cookies } from "next/headers";
 import { randomUUID } from "node:crypto";
 
-import { findUserByCredentials, mutateData, readData, sanitizeUser } from "@/lib/dataStore";
+import {
+  createSessionRecord,
+  deleteSessionById,
+  deleteSessionsForUser,
+  findUserByCredentials,
+  findUserById,
+  findSessionById,
+  sanitizeUser
+} from "@/lib/supabaseData";
 import type { SanitizedUser, UserAccount, UserRole } from "@/types";
 
 export const SESSION_COOKIE = "manga_session";
 const DAY_IN_SECONDS = 60 * 60 * 24;
 
-export function validateCredentials(email: string, password: string): UserAccount | null {
-  return findUserByCredentials(email, password);
+export async function validateCredentials(email: string, password: string): Promise<UserAccount | null> {
+  return await findUserByCredentials(email, password);
 }
 
 export async function createSession(userId: string) {
@@ -16,14 +24,13 @@ export async function createSession(userId: string) {
   const now = Date.now();
   const createdAt = new Date(now).toISOString();
   const expiresAt = new Date(now + DAY_IN_SECONDS * 1000).toISOString();
-
-  mutateData((db) => ({
-    ...db,
-    sessions: [
-      ...db.sessions.filter((session) => session.userId !== userId),
-      { id: sessionId, userId, createdAt, expiresAt }
-    ]
-  }));
+  await deleteSessionsForUser(userId);
+  await createSessionRecord({
+    id: sessionId,
+    userId,
+    createdAt,
+    expiresAt
+  });
 
   const store = await cookies();
   store.set(SESSION_COOKIE, sessionId, {
@@ -39,10 +46,7 @@ export async function clearSession() {
   const store = await cookies();
   const sessionId = store.get(SESSION_COOKIE)?.value;
   if (sessionId) {
-    mutateData((db) => ({
-      ...db,
-      sessions: db.sessions.filter((session) => session.id !== sessionId)
-    }));
+    await deleteSessionById(sessionId);
   }
   store.delete(SESSION_COOKIE);
 }
@@ -52,14 +56,19 @@ export async function getSessionUser() {
   const sessionId = store.get(SESSION_COOKIE)?.value;
   if (!sessionId) return null;
 
-  const db = readData();
-  const session = db.sessions.find((candidate) => candidate.id === sessionId);
-  if (!session || new Date(session.expiresAt).getTime() < Date.now()) {
+  const session = await findSessionById(sessionId);
+  if (!session || new Date(session.expires_at).getTime() < Date.now()) {
+    await deleteSessionById(sessionId);
     return null;
   }
 
-  const user = db.users.find((candidate) => candidate.id === session.userId);
-  return user ? sanitizeUser(user) : null;
+  const user = await findUserById(session.user_id);
+  if (!user) {
+    await deleteSessionById(sessionId);
+    return null;
+  }
+
+  return sanitizeUser(user);
 }
 
 export async function getCurrentSession(): Promise<SanitizedUser | null> {

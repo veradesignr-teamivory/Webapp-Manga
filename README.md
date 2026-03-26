@@ -10,7 +10,7 @@ MangaMake is a dark-themed manga editor web application with role-based access:
 - Next.js (App Router)
 - TypeScript
 - Cookie-based session auth
-- JSON-backed local datastore (`data/db.json`)
+- Supabase Postgres (`@supabase/supabase-js`)
 
 ## Demo Credentials
 
@@ -30,6 +30,24 @@ npm run dev
 
 Then open `http://localhost:3000`.
 
+### Supabase setup
+
+1. Create a Supabase project.
+2. In Supabase SQL editor, run:
+   - `supabase/schema.sql`
+3. Add environment variables in `.env.local`:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL="https://<your-project-ref>.supabase.co"
+SUPABASE_SERVICE_ROLE_KEY="<your-service-role-key>"
+```
+
+4. Run app:
+
+```bash
+npm run dev
+```
+
 ## Main Routes
 
 - `/` Landing page
@@ -45,6 +63,19 @@ Then open `http://localhost:3000`.
 - `GET /api/auth/me` return current signed-in user
 - `GET /api/assets` list assets (optionally `?type=<category>`)
 - `POST /api/admin/assets/bulk` admin-only bulk upload
+
+## Database Schema (Supabase)
+
+Tables:
+
+- `app_users` (id, email, password, name, role, created_at)
+- `app_sessions` (id, user_id, created_at, expires_at)
+- `assets` (id, name, category, tags, src, uploaded_by, created_at)
+
+Seed users inserted by `supabase/schema.sql`:
+
+- `admin@mangamake.dev` / `admin123`
+- `user@mangamake.dev` / `user123`
 
 ## Admin Bulk Upload Flow
 

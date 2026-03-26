@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 
 import { getCurrentSession } from "@/lib/auth";
 import { deriveTagsFromFilename } from "@/lib/assetUtils";
-import { mutateData } from "@/lib/dataStore";
+import { insertAssets } from "@/lib/supabaseData";
 import { isAssetCategory } from "@/lib/constants";
 import type { AssetRecord, AssetCategory } from "@/types";
 
@@ -68,13 +68,10 @@ export async function POST(request: Request) {
     );
   }
 
-  mutateData((db) => ({
-    ...db,
-    assets: [...newAssets, ...db.assets]
-  }));
+  const inserted = await insertAssets(newAssets);
 
   return NextResponse.json({
-    inserted: newAssets.length,
-    assets: newAssets
+    inserted: inserted.length,
+    assets: inserted
   });
 }

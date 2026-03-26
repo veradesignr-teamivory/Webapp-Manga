@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { readData } from "@/lib/dataStore";
+import { listAssets } from "@/lib/supabaseData";
 import { ASSET_CATEGORIES } from "@/lib/constants";
 import type { AssetCategory } from "@/types";
 
@@ -19,11 +19,11 @@ export async function GET(request: Request) {
     );
   }
 
-  const db = readData();
-  const assets =
-    queryType === "all"
-      ? db.assets
-      : db.assets.filter((item) => item.category === queryType);
-
-  return NextResponse.json({ assets });
+  try {
+    const assets = await listAssets(queryType === "all" ? undefined : queryType);
+    return NextResponse.json({ assets });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Could not fetch assets.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
