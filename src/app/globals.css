@@ -309,6 +309,16 @@ textarea {
   color: var(--muted);
 }
 
+.dashboard-role {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .dashboard-actions {
   margin-top: 18px;
   display: flex;

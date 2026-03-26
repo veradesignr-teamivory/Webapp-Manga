@@ -34,6 +34,6 @@ export async function POST(request: Request) {
       name: user.name,
       role: user.role
     },
-    redirectTo: user.role === "admin" ? "/admin" : "/editor"
+    redirectTo: "/dashboard"
   });
 }
