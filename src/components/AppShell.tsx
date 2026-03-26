@@ -8,6 +8,7 @@ type AppShellProps = {
   userName: string;
   role: "admin" | "user";
   showAdmin?: boolean;
+  editor?: boolean;
   children: ReactNode;
 };
 
@@ -16,38 +17,44 @@ export function AppShell({
   userName,
   role,
   showAdmin = false,
+  editor = false,
   children
 }: AppShellProps) {
   return (
-    <div className="app-shell">
-      <header className="editor-header">
-        <div className="editor-header-left">
-          <div className="logo">MangaMake</div>
-          <nav className="editor-header-nav">
-            <a href="#">File</a>
-            <a href="#">Help</a>
+    <div className="reference-shell">
+      <header className="ref-topbar">
+        <div className="ref-topbar-left">
+          <Link href="/" className="ref-logo">
+            MangaMake
+          </Link>
+          <nav className="ref-menu">
+            <button type="button">File</button>
+            <button type="button">Help</button>
           </nav>
         </div>
-        <div className="editor-header-center">{projectName}</div>
-        <div className="editor-header-right">
-          <button type="button" className="btn btn-primary">
+        <div className="ref-topbar-center">
+          {projectName}
+          {editor ? null : null}
+        </div>
+        <div className="ref-topbar-right">
+          <button type="button" className="ref-pill ref-pill-primary">
             Export
           </button>
           {showAdmin ? (
-            <Link href="/admin" className="btn btn-secondary">
+            <Link href="/admin" className="ref-pill">
               Admin
             </Link>
           ) : null}
-          <Link href="/dashboard" className="btn btn-secondary">
+          <Link href="/dashboard" className="ref-pill">
             Dashboard
           </Link>
           <form action="/api/auth/logout" method="post">
-            <button type="submit" className="btn btn-secondary">
+            <button type="submit" className="ref-pill">
               Sign Out
             </button>
           </form>
-          <span className="user-chip">
-            {userName} ({role})
+          <span className="ref-user">
+            {userName} · {role}
           </span>
         </div>
       </header>

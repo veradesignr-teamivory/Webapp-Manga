@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { SIDEBAR_ORDER, getCategoryLabel } from "@/lib/constants";
+import { SIDEBAR_ORDER, getCategoryLabel, getCategoryEmptyLabel } from "@/lib/constants";
 import type { AssetCategory, AssetRecord, EditorPlacedAsset, UserRole } from "@/types";
 
 type AssetsResponse = {
@@ -26,6 +26,9 @@ export default function EditorPage() {
   const [userName, setUserName] = useState("User");
   const [role, setRole] = useState<UserRole>("user");
   const [search, setSearch] = useState("");
+  const [filterCategory, setFilterCategory] = useState("All Categories");
+  const [filterTag, setFilterTag] = useState("Others");
+  const [isSelectMode, setIsSelectMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -95,25 +98,45 @@ export default function EditorPage() {
       userName={userName}
       role={role}
       showAdmin={role === "admin"}
+      editor
     >
-      <div className="editor-root">
+      <div className="editor-root reference-layout">
         <aside className="left-navigation card">
-          <div className="brand">Poses</div>
-          <nav>
-            {SIDEBAR_ORDER.map((item) => {
-              const active = selectedCategory === item;
-              return (
-                <button
-                  key={item}
-                  type="button"
-                  className={`sidebar-button ${active ? "active" : ""}`}
-                  onClick={() => setSelectedCategory(item)}
-                >
-                  {getCategoryLabel(item)}
-                </button>
-              );
-            })}
-          </nav>
+          <button type="button" className="rail-utility active">
+            Poses
+          </button>
+          <button type="button" className="rail-utility">
+            Add Image
+          </button>
+          <button type="button" className="rail-utility">
+            Vertical Flip
+          </button>
+          <button type="button" className="rail-utility">
+            Horizontal Flip
+          </button>
+          <button type="button" className="rail-utility">
+            Send Forward
+          </button>
+          <button type="button" className="rail-utility">
+            Send Backward
+          </button>
+          <button type="button" className="rail-utility">
+            Clear Drawing
+          </button>
+          <div className="rail-divider" />
+          {SIDEBAR_ORDER.map((item) => {
+            const active = selectedCategory === item;
+            return (
+              <button
+                key={item}
+                type="button"
+                className={`sidebar-button ${active ? "active" : ""}`}
+                onClick={() => setSelectedCategory(item)}
+              >
+                {getCategoryLabel(item)}
+              </button>
+            );
+          })}
         </aside>
 
         <section className="library card">
@@ -124,45 +147,65 @@ export default function EditorPage() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
-          <p className="muted">
-            {filteredLibrary.length > 0
-              ? `${filteredLibrary.length} asset(s) available`
-              : `No ${getCategoryLabel(selectedCategory).toLowerCase()} yet`}
-          </p>
-
-          <div className="asset-grid">
-            {filteredLibrary.map((asset) => (
-              <button
-                key={asset.id}
-                type="button"
-                className="asset-card"
-                onClick={() => addAssetToCanvas(asset)}
+          <div className="filters-row">
+            <select
+              className="text-input"
+              value={filterCategory}
+              onChange={(event) => setFilterCategory(event.target.value)}
+            >
+              <option>All Categories</option>
+              <option>Admin Upload</option>
+              <option>Community</option>
+            </select>
+            <div className="filters-inline">
+              <select
+                className="text-input"
+                value={filterTag}
+                onChange={(event) => setFilterTag(event.target.value)}
               >
-                <img src={asset.src} alt={asset.name} />
-                <strong>{asset.name}</strong>
-                <small>{asset.tags.join(", ") || "untagged"}</small>
+                <option>Others</option>
+                <option>Action</option>
+                <option>Combat</option>
+              </select>
+              <button type="button" className="btn btn-primary btn-compact">
+                Mass Upload
               </button>
-            ))}
+            </div>
           </div>
+          <label className="select-toggle">
+            <input
+              type="checkbox"
+              checked={isSelectMode}
+              onChange={(event) => setIsSelectMode(event.target.checked)}
+            />
+            Select
+          </label>
+          {filteredLibrary.length === 0 ? (
+            <div className="empty-panel">
+              <div className="empty-upload-icon">⇧</div>
+              <p>{getCategoryEmptyLabel(selectedCategory)}</p>
+              <small>{`Upload your first ${getCategoryLabel(selectedCategory).slice(0, -1).toLowerCase()}`}</small>
+            </div>
+          ) : (
+            <div className="asset-grid reference-grid">
+              {filteredLibrary.map((asset) => (
+                <button
+                  key={asset.id}
+                  type="button"
+                  className="asset-card"
+                  onClick={() => addAssetToCanvas(asset)}
+                >
+                  <img src={asset.src} alt={asset.name} />
+                  <strong>{asset.name}</strong>
+                  <small>{asset.tags.join(" ") || "others"}</small>
+                </button>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="canvas-area">
-          <header className="editor-top card">
-            <div className="project-name">{projectName}</div>
-            <div className="top-actions">
-              <button type="button" className="ghost-button" onClick={() => setZoom((v) => Math.max(25, v - 10))}>
-                -
-              </button>
-              <span>{zoom}%</span>
-              <button type="button" className="ghost-button" onClick={() => setZoom((v) => Math.min(300, v + 10))}>
-                +
-              </button>
-              <a href="/dashboard" className="link-button">
-                Dashboard
-              </a>
-            </div>
-          </header>
-
+          <div className="canvas-size-pill">1080 × 1920px · {zoom}%</div>
           <div className="canvas-board card">
             <div className="canvas-page" style={{ transform: `scale(${zoom / 100})` }}>
               {canvasAssets.map((placed) => {
@@ -183,11 +226,27 @@ export default function EditorPage() {
                 );
               })}
             </div>
+            {canvasAssets.length === 0 ? <div className="canvas-empty-line" /> : null}
+          </div>
+          <div className="canvas-zoom-controls">
+            <button type="button" className="ghost-button" onClick={() => setZoom((v) => Math.max(25, v - 10))}>
+              -
+            </button>
+            <span>{zoom}%</span>
+            <button type="button" className="ghost-button" onClick={() => setZoom((v) => Math.min(300, v + 10))}>
+              +
+            </button>
           </div>
         </section>
 
         <aside className="right-tools card">
           <div className="tool-header">Tools</div>
+          <div className="icon-tools">
+            <button type="button">↶</button>
+            <button type="button">↷</button>
+            <button type="button">⌕</button>
+            <button type="button">⌖</button>
+          </div>
           <div className="tool-group">
             <p>Brush</p>
             <label>
@@ -205,14 +264,15 @@ export default function EditorPage() {
           </div>
           <div className="tool-group">
             <p>Layers</p>
-            <small>{canvasAssets.length} element(s)</small>
+            <small>{canvasAssets.length} element</small>
+            <small>None selected</small>
           </div>
           <div className="tool-group">
-            <p>Signed in as</p>
-            <strong>{userName}</strong>
+            <p>Zoom</p>
+            <small>{zoom}%</small>
+            <small>{loading ? "Loading assets..." : "Ready"}</small>
+            {error ? <small className="error">{error}</small> : null}
           </div>
-          {loading ? <small>Loading assets...</small> : null}
-          {error ? <small className="error">{error}</small> : null}
         </aside>
       </div>
     </AppShell>
