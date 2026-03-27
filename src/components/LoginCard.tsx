@@ -7,6 +7,9 @@ export function LoginCard() {
   const router = useRouter();
   const [email, setEmail] = useState("admin@mangamake.dev");
   const [password, setPassword] = useState("admin123");
+  const isSupabaseConfigured =
+    typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string" &&
+    process.env.NEXT_PUBLIC_SUPABASE_URL.length > 0;
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -69,8 +72,14 @@ export function LoginCard() {
         />
 
         {error ? <p className="form-error">{error}</p> : null}
+        {!isSupabaseConfigured ? (
+          <p className="form-error">
+            Supabase is not configured in this runtime. Set NEXT_PUBLIC_SUPABASE_URL and
+            SUPABASE_SERVICE_ROLE_KEY, then restart <code>npm run dev</code>.
+          </p>
+        ) : null}
 
-        <button type="submit" disabled={pending}>
+        <button type="submit" disabled={pending || !isSupabaseConfigured}>
           {pending ? "Signing in..." : "Sign In"}
         </button>
       </form>
