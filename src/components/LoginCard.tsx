@@ -23,7 +23,12 @@ export function LoginCard() {
       body: JSON.stringify({ email, password })
     });
 
-    const payload = await response.json();
+    let payload: { error?: string; redirectTo?: string } = {};
+    try {
+      payload = (await response.json()) as { error?: string; redirectTo?: string };
+    } catch {
+      payload = {};
+    }
 
     setPending(false);
 

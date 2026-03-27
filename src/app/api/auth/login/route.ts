@@ -18,7 +18,22 @@ export async function POST(request: Request) {
 
   const email = String(body.email ?? "").trim().toLowerCase();
   const password = String(body.password ?? "");
-  const user = await findUserByCredentials(email, password);
+
+  let user;
+  try {
+    user = await findUserByCredentials(email, password);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Login failed.";
+    const isConfigError = message.includes("Missing required environment variable");
+    return NextResponse.json(
+      {
+        error: isConfigError
+          ? "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local, then restart dev server."
+          : message
+      },
+      { status: isConfigError ? 503 : 500 }
+    );
+  }
 
   if (!user) {
     return NextResponse.json(
