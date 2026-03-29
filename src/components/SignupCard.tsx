@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export function SignupCard() {
@@ -9,11 +9,24 @@ export function SignupCard() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [redirectPath, setRedirectPath] = useState("/dashboard");
   const isSupabaseConfigured =
     typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string" &&
     process.env.NEXT_PUBLIC_SUPABASE_URL.length > 0;
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    if (!successOpen) return;
+
+    const timer = window.setTimeout(() => {
+      router.push(redirectPath);
+      router.refresh();
+    }, 1200);
+
+    return () => window.clearTimeout(timer);
+  }, [successOpen, redirectPath, router]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -42,8 +55,8 @@ export function SignupCard() {
       return;
     }
 
-    router.push(payload.redirectTo || "/dashboard");
-    router.refresh();
+    setRedirectPath(payload.redirectTo || "/dashboard");
+    setSuccessOpen(true);
   };
 
   return (
@@ -92,7 +105,7 @@ export function SignupCard() {
           </p>
         ) : null}
 
-        <button type="submit" disabled={pending || !isSupabaseConfigured}>
+        <button type="submit" disabled={pending || !isSupabaseConfigured || successOpen}>
           {pending ? "Creating account..." : "Sign Up"}
         </button>
       </form>
@@ -105,6 +118,15 @@ export function SignupCard() {
           </Link>
         </p>
       </div>
+
+      {successOpen ? (
+        <div className="success-popup-backdrop" role="alertdialog" aria-modal="true">
+          <div className="success-popup">
+            <h3>Signup successful</h3>
+            <p>Your account is ready. Redirecting to your dashboard...</p>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
