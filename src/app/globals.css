@@ -529,6 +529,18 @@ textarea {
   cursor: pointer;
 }
 
+.auth-link {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.auth-link a {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .form-error {
   color: var(--danger);
   margin: 4px 0 0;

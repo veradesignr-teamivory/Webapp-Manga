@@ -7,6 +7,7 @@ export default function Home() {
         <div className="brand">MangaMake</div>
         <nav className="landing-nav">
           <Link href="/login">Sign In</Link>
+          <Link href="/signup">Sign Up</Link>
           <Link className="badge" href="/admin">
             Admin
           </Link>

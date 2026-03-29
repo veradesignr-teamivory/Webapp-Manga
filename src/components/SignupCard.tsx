@@ -1,13 +1,14 @@
 "use client";
 
-import { FormEvent, useState } from "react";
 import Link from "next/link";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
-export function LoginCard() {
+export function SignupCard() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@mangamake.dev");
-  const [password, setPassword] = useState("admin123");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const isSupabaseConfigured =
     typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string" &&
     process.env.NEXT_PUBLIC_SUPABASE_URL.length > 0;
@@ -19,12 +20,12 @@ export function LoginCard() {
     setError(null);
     setPending(true);
 
-    const response = await fetch("/api/auth/login", {
+    const response = await fetch("/api/auth/signup", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ name, email, password })
     });
 
     let payload: { error?: string; redirectTo?: string } = {};
@@ -37,25 +38,35 @@ export function LoginCard() {
     setPending(false);
 
     if (!response.ok) {
-      setError(payload.error ?? "Unable to sign in.");
+      setError(payload.error ?? "Unable to sign up.");
       return;
     }
 
-    router.push(payload.redirectTo || "/editor");
+    router.push(payload.redirectTo || "/dashboard");
     router.refresh();
   };
 
   return (
     <div className="login-card">
       <div className="badge">MangaMake Studio</div>
-      <h2 className="title">Welcome back</h2>
+      <h2 className="title">Create your account</h2>
       <p className="subtitle">
-        Sign in as admin to upload assets in bulk, or as user to build manga pages.
+        New creators can sign up here, then start building manga pages immediately.
       </p>
       <form onSubmit={handleSubmit}>
+        <label htmlFor="name">Name</label>
+        <input
+          id="name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          placeholder="Your name"
+          required
+        />
+
         <label htmlFor="email">Email</label>
         <input
           id="email"
+          type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
@@ -68,8 +79,9 @@ export function LoginCard() {
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          placeholder="********"
+          placeholder="At least 6 characters"
           required
+          minLength={6}
         />
 
         {error ? <p className="form-error">{error}</p> : null}
@@ -81,20 +93,18 @@ export function LoginCard() {
         ) : null}
 
         <button type="submit" disabled={pending || !isSupabaseConfigured}>
-          {pending ? "Signing in..." : "Sign In"}
+          {pending ? "Creating account..." : "Sign Up"}
         </button>
       </form>
 
       <div className="demo-accounts">
-        <p>Demo accounts</p>
-        <ul>
-          <li>admin@mangamake.dev / admin123</li>
-          <li>user@mangamake.dev / user123</li>
-        </ul>
+        <p>
+          Already have an account?{" "}
+          <Link href="/login">
+            Sign in
+          </Link>
+        </p>
       </div>
-      <p className="auth-link">
-        New here? <Link href="/signup">Create an account</Link>
-      </p>
     </div>
   );
 }

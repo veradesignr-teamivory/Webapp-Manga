@@ -81,6 +81,21 @@ export async function findUserByCredentials(
   return mapUserRowToAccount(data);
 }
 
+export async function findUserByEmail(email: string): Promise<UserAccount | null> {
+  const supabaseAdmin = getSupabaseAdmin() as any;
+  const { data, error } = await supabaseAdmin
+    .from("app_users")
+    .select("id,email,password,name,role")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Supabase user-by-email query failed: ${error.message}`);
+  }
+  if (!data) return null;
+  return mapUserRowToAccount(data);
+}
+
 export async function findUserById(id: string): Promise<UserAccount | null> {
   const supabaseAdmin = getSupabaseAdmin() as any;
   const { data, error } = await supabaseAdmin
@@ -93,6 +108,33 @@ export async function findUserById(id: string): Promise<UserAccount | null> {
     throw new Error(`Supabase user-by-id query failed: ${error.message}`);
   }
   if (!data) return null;
+  return mapUserRowToAccount(data);
+}
+
+export async function createUserAccount(input: {
+  email: string;
+  password: string;
+  name: string;
+  role?: "admin" | "user";
+}): Promise<UserAccount> {
+  const supabaseAdmin = getSupabaseAdmin() as any;
+  const payload = {
+    email: input.email,
+    password: input.password,
+    name: input.name,
+    role: input.role ?? "user"
+  };
+
+  const { data, error } = await supabaseAdmin
+    .from("app_users")
+    .insert(payload)
+    .select("id,email,password,name,role")
+    .single();
+
+  if (error) {
+    throw new Error(`Supabase user insert failed: ${error.message}`);
+  }
+
   return mapUserRowToAccount(data);
 }
 
