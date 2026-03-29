@@ -489,6 +489,11 @@ textarea {
   padding: 18px;
 }
 
+.auth-page-error {
+  width: min(100%, 440px);
+  margin: 0 0 10px;
+}
+
 .login-card {
   width: min(100%, 440px);
   border: 1px solid var(--border);

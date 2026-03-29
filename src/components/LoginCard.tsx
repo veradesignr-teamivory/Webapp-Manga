@@ -1,49 +1,9 @@
-"use client";
-
-import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+type LoginCardProps = {
+  errorMessage?: string;
+};
 
-export function LoginCard() {
-  const router = useRouter();
-  const [email, setEmail] = useState("admin@mangamake.dev");
-  const [password, setPassword] = useState("admin123");
-  const isSupabaseConfigured =
-    typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string" &&
-    process.env.NEXT_PUBLIC_SUPABASE_URL.length > 0;
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError(null);
-    setPending(true);
-
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ email, password })
-    });
-
-    let payload: { error?: string; redirectTo?: string } = {};
-    try {
-      payload = (await response.json()) as { error?: string; redirectTo?: string };
-    } catch {
-      payload = {};
-    }
-
-    setPending(false);
-
-    if (!response.ok) {
-      setError(payload.error ?? "Unable to sign in.");
-      return;
-    }
-
-    router.push(payload.redirectTo || "/editor");
-    router.refresh();
-  };
+export function LoginCard({ errorMessage }: LoginCardProps) {
 
   return (
     <div className="login-card">
@@ -52,12 +12,12 @@ export function LoginCard() {
       <p className="subtitle">
         Sign in as admin to upload assets in bulk, or as user to build manga pages.
       </p>
-      <form onSubmit={handleSubmit}>
+      <form action="/api/auth/login" method="post">
         <label htmlFor="email">Email</label>
         <input
           id="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          name="email"
+          defaultValue="admin@mangamake.dev"
           placeholder="you@example.com"
           required
         />
@@ -65,24 +25,16 @@ export function LoginCard() {
         <label htmlFor="password">Password</label>
         <input
           id="password"
+          name="password"
           type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
+          defaultValue="admin123"
           placeholder="********"
           required
         />
 
-        {error ? <p className="form-error">{error}</p> : null}
-        {!isSupabaseConfigured ? (
-          <p className="form-error">
-            Supabase is not configured in this runtime. Set NEXT_PUBLIC_SUPABASE_URL and
-            SUPABASE_SERVICE_ROLE_KEY, then restart <code>npm run dev</code>.
-          </p>
-        ) : null}
+        {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
 
-        <button type="submit" disabled={pending || !isSupabaseConfigured}>
-          {pending ? "Signing in..." : "Sign In"}
-        </button>
+        <button type="submit">Sign In</button>
       </form>
 
       <div className="demo-accounts">
